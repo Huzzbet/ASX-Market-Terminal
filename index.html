@@ -1,0 +1,1206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ASX Market Terminal — Finviz Style</title>
+  <style>
+    :root{
+      --bg:#0a0d14;
+      --bg2:#0f1420;
+      --panel:#111826;
+      --panel2:#0d1320;
+      --card:#151c2c;
+      --card-hover:#1a2437;
+      --line:rgba(255,255,255,.08);
+      --line-2:rgba(255,255,255,.12);
+      --text:#eef3ff;
+      --muted:#99a7c2;
+      --soft:#7f8aa3;
+      --green:#2dd36f;
+      --green2:#1faa59;
+      --red:#ff5d73;
+      --red2:#cc4259;
+      --amber:#f8c14b;
+      --blue:#53a7ff;
+      --cyan:#55d6ff;
+      --purple:#9b7bff;
+      --shadow:0 18px 50px rgba(0,0,0,.38);
+      --radius:18px;
+      --radius-sm:12px;
+      --font:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#080b11 0%,#0c111a 100%);color:var(--text);font-family:var(--font)}
+    a{color:inherit;text-decoration:none}
+    button,input,select{font:inherit}
+
+    .app{
+      max-width:1600px;
+      margin:0 auto;
+      padding:18px;
+    }
+
+    .topbar{
+      display:grid;
+      grid-template-columns: 1.4fr auto auto;
+      gap:14px;
+      align-items:center;
+      margin-bottom:18px;
+    }
+
+    .brand{
+      background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:16px 18px;
+      box-shadow:var(--shadow);
+    }
+
+    .brand h1{
+      margin:0;
+      font-size:24px;
+      line-height:1.1;
+      letter-spacing:.2px;
+      font-weight:800;
+    }
+
+    .brand .sub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+
+    .pillbar{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+    }
+
+    .pill strong{color:var(--text)}
+
+    .actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .btn:hover{background:rgba(255,255,255,.06);transform:translateY(-1px)}
+    .btn.active{
+      background:linear-gradient(180deg,rgba(83,167,255,.18),rgba(83,167,255,.08));
+      border-color:rgba(83,167,255,.45);
+      color:#fff;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 330px 1fr;
+      gap:18px;
+      align-items:start;
+    }
+
+    .sidebar{
+      display:grid;
+      gap:18px;
+      position:sticky;
+      top:18px;
+    }
+
+    .panel{
+      background:linear-gradient(180deg,var(--panel),var(--panel2));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .panel-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+    }
+
+    .panel-title{
+      margin:0;
+      font-size:14px;
+      font-weight:800;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+    }
+
+    .panel-sub{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .panel-body{
+      padding:16px;
+    }
+
+    .regime{
+      display:grid;
+      gap:12px;
+    }
+
+    .regime-chip{
+      padding:14px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.025);
+    }
+
+    .regime-chip .label{
+      font-size:11px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.4px;
+      margin-bottom:5px;
+    }
+
+    .regime-chip .value{
+      font-size:18px;
+      font-weight:800;
+      line-height:1.2;
+    }
+
+    .risk-on{color:var(--green)}
+    .risk-off{color:var(--red)}
+    .neutral{color:var(--amber)}
+
+    .mini-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .mini-row{
+      display:grid;
+      grid-template-columns: 1fr auto auto;
+      gap:8px;
+      align-items:center;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:rgba(255,255,255,.02);
+      font-size:13px;
+    }
+
+    .mini-row .name{font-weight:700}
+    .mini-row .price{color:var(--muted);font-family:var(--mono);font-size:12px}
+    .mini-row .chg{
+      font-weight:800;
+      padding:4px 8px;
+      border-radius:999px;
+      min-width:68px;
+      text-align:center;
+      font-size:12px;
+      font-family:var(--mono);
+    }
+
+    .pos{background:rgba(45,211,111,.13);color:var(--green)}
+    .neg{background:rgba(255,93,115,.14);color:var(--red)}
+    .flat{background:rgba(248,193,75,.12);color:var(--amber)}
+
+    .content{
+      display:grid;
+      gap:18px;
+    }
+
+    .hero{
+      background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));
+      border:1px solid var(--line);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .hero-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      flex-wrap:wrap;
+    }
+
+    .hero-title{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .hero-title h2{
+      margin:0;
+      font-size:18px;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+
+    .hero-title .note{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .legend{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .legend-scale{
+      width:220px;
+      height:12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:linear-gradient(90deg,#7b1020 0%, #c93c55 25%, #2a2f3b 50%, #1f8b4d 75%, #27d26c 100%);
+    }
+
+    .heatmap-wrap{
+      padding:14px;
+    }
+
+    .sector-grid{
+      display:grid;
+      grid-template-columns: repeat(3,1fr);
+      gap:12px;
+    }
+
+    .sector{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:rgba(255,255,255,.02);
+      overflow:hidden;
+      min-height:260px;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .sector-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:12px 12px 10px;
+      border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.025);
+    }
+
+    .sector-name{
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.45px;
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    .sector-change{
+      font-size:12px;
+      font-family:var(--mono);
+      font-weight:800;
+    }
+
+    .tiles{
+      display:grid;
+      gap:8px;
+      padding:10px;
+      grid-template-columns: repeat(12,1fr);
+      grid-auto-rows: 42px;
+      flex:1;
+    }
+
+    .tile{
+      position:relative;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.08);
+      padding:8px;
+      overflow:hidden;
+      cursor:pointer;
+      transition:.18s ease;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      min-height:42px;
+    }
+
+    .tile:hover{
+      transform:translateY(-2px);
+      box-shadow:0 10px 26px rgba(0,0,0,.28);
+      border-color:rgba(255,255,255,.18);
+    }
+
+    .tile .ticker{
+      font-weight:900;
+      letter-spacing:.25px;
+      font-size:13px;
+    }
+
+    .tile .company{
+      font-size:10px;
+      color:rgba(255,255,255,.82);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      margin-top:2px;
+    }
+
+    .tile .tile-bottom{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      font-size:10px;
+      margin-top:4px;
+    }
+
+    .tile .tile-move{
+      font-family:var(--mono);
+      font-weight:900;
+      font-size:11px;
+    }
+
+    .tile .tile-weight{
+      color:rgba(255,255,255,.82);
+      font-size:10px;
+    }
+
+    .tile.pos-1{background:#14301f}
+    .tile.pos-2{background:#184428}
+    .tile.pos-3{background:#1f6336}
+    .tile.pos-4{background:#268142}
+    .tile.neg-1{background:#31141c}
+    .tile.neg-2{background:#471823}
+    .tile.neg-3{background:#64202f}
+    .tile.neg-4{background:#8a263a}
+    .tile.flat{
+      background:#232a36;
+      color:#eef3ff;
+    }
+
+    .tile.w1{grid-column:span 2}
+    .tile.w2{grid-column:span 3}
+    .tile.w3{grid-column:span 4}
+    .tile.w4{grid-column:span 5}
+    .tile.w5{grid-column:span 6}
+
+    .tile.h1{grid-row:span 1}
+    .tile.h2{grid-row:span 2}
+    .tile.h3{grid-row:span 3}
+    .tile.h4{grid-row:span 4}
+
+    .rows-2{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:18px;
+    }
+
+    .rows-3{
+      display:grid;
+      grid-template-columns: repeat(3,1fr);
+      gap:18px;
+    }
+
+    .stats-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+    }
+
+    .stat{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+      background:rgba(255,255,255,.02);
+    }
+
+    .stat .label{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.45px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+
+    .stat .value{
+      font-size:24px;
+      font-weight:900;
+      line-height:1;
+    }
+
+    .stat .meta{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+
+    th,td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--line);
+      text-align:left;
+      vertical-align:middle;
+    }
+
+    th{
+      color:var(--muted);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+      font-weight:800;
+    }
+
+    tbody tr:hover{background:rgba(255,255,255,.025)}
+
+    .ticker-cell{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+
+    .ticker-cell strong{font-size:13px}
+    .ticker-cell span{font-size:11px;color:var(--muted)}
+
+    .reason{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.025);
+      padding:5px 9px;
+      border-radius:999px;
+      font-size:11px;
+      color:var(--muted);
+      margin-right:6px;
+      margin-bottom:6px;
+    }
+
+    .talking-points{
+      display:grid;
+      gap:10px;
+    }
+
+    .point{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:rgba(255,255,255,.02);
+      padding:12px 14px;
+    }
+
+    .point strong{
+      display:block;
+      margin-bottom:5px;
+      font-size:13px;
+    }
+
+    .point span{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .footer-note{
+      padding:14px 16px;
+      color:var(--muted);
+      font-size:12px;
+      border-top:1px solid var(--line);
+      background:rgba(255,255,255,.015);
+    }
+
+    .tiny{
+      font-size:11px;
+      color:var(--soft);
+    }
+
+    @media (max-width: 1280px){
+      .grid{grid-template-columns:1fr}
+      .sidebar{position:static}
+      .sector-grid{grid-template-columns:repeat(2,1fr)}
+      .rows-2,.rows-3,.stats-grid{grid-template-columns:1fr}
+      .topbar{grid-template-columns:1fr}
+      .pillbar,.actions{justify-content:flex-start}
+    }
+
+    @media (max-width: 760px){
+      .app{padding:12px}
+      .sector-grid{grid-template-columns:1fr}
+      .hero-top{align-items:flex-start}
+      .legend-scale{width:160px}
+      .brand h1{font-size:20px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">
+        <h1>ASX Market Terminal</h1>
+        <div class="sub">
+          <span>Australia · Melbourne · Internal Use Only</span>
+          <span>•</span>
+          <span id="timestamp">Updated: --</span>
+        </div>
+      </div>
+
+      <div class="pillbar">
+        <div class="pill"><strong>Mode:</strong> Finviz Style</div>
+        <div class="pill"><strong>Universe:</strong> ASX 200 Leaders</div>
+        <div class="pill"><strong>View:</strong> 1M Review</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn active" data-view="day">1D</button>
+        <button class="btn" data-view="week">1W</button>
+        <button class="btn" data-view="month">1M</button>
+        <button class="btn" data-view="ytd">YTD</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <aside class="sidebar">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h3 class="panel-title">Market Regime</h3>
+              <div class="panel-sub">Quick read on the tape</div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="regime">
+              <div class="regime-chip">
+                <div class="label">Current Regime</div>
+                <div class="value risk-off" id="regimeLabel">Risk-Off Rotation</div>
+              </div>
+              <div class="regime-chip">
+                <div class="label">Primary Driver</div>
+                <div class="value" id="primaryDriver">Oil, geopolitics, higher-for-longer rates</div>
+              </div>
+              <div class="regime-chip">
+                <div class="label">Best Relative Strength</div>
+                <div class="value risk-on" id="bestStrength">Energy, defence, selective gold</div>
+              </div>
+              <div class="regime-chip">
+                <div class="label">Weakest Pocket</div>
+                <div class="value risk-off" id="weakestPocket">Banks, cyclicals, consumer travel</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h3 class="panel-title">Macro Snapshot</h3>
+              <div class="panel-sub">Key market inputs</div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="mini-list" id="macroList"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h3 class="panel-title">Client Talking Points</h3>
+              <div class="panel-sub">Use on calls immediately</div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="talking-points" id="talkingPoints"></div>
+          </div>
+        </section>
+      </aside>
+
+      <main class="content">
+        <section class="hero">
+          <div class="hero-top">
+            <div class="hero-title">
+              <h2>ASX Heatmap</h2>
+              <div class="note">Size approximates market importance. Colour reflects selected period performance.</div>
+            </div>
+            <div class="legend">
+              <span>- Strong Red</span>
+              <div class="legend-scale"></div>
+              <span>Strong Green +</span>
+            </div>
+          </div>
+
+          <div class="heatmap-wrap">
+            <div class="sector-grid" id="sectorGrid"></div>
+          </div>
+
+          <div class="footer-note">
+            Click any tile to inspect the stock story below. This layout is designed to mimic a Finviz-style quick-read market view for adviser use.
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h3 class="panel-title">Index & Breadth Overview</h3>
+              <div class="panel-sub">High-level pulse</div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="stats-grid" id="statsGrid"></div>
+          </div>
+        </section>
+
+        <div class="rows-2">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Top Movers</h3>
+                <div class="panel-sub">Leadership and pain points</div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Stock</th>
+                    <th>Move</th>
+                    <th>Theme</th>
+                    <th>Comment</th>
+                  </tr>
+                </thead>
+                <tbody id="moversTable"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Selected Stock Story</h3>
+                <div class="panel-sub">Narrative card</div>
+              </div>
+            </div>
+            <div class="panel-body" id="stockStory">
+              <div class="point">
+                <strong>Select a tile from the heatmap</strong>
+                <span>This panel updates with a quick explanation you can use in a meeting or market note.</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="rows-3">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Sector Performance</h3>
+                <div class="panel-sub">Selected period</div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Sector</th>
+                    <th>Change</th>
+                    <th>Read</th>
+                  </tr>
+                </thead>
+                <tbody id="sectorPerfTable"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Opportunity Board</h3>
+                <div class="panel-sub">What stands out</div>
+              </div>
+            </div>
+            <div class="panel-body" id="opportunityBoard"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Themes in Play</h3>
+                <div class="panel-sub">Current market lenses</div>
+              </div>
+            </div>
+            <div class="panel-body" id="themesPanel"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      view: 'day',
+      selectedTicker: null
+    };
+
+    const data = {
+      indices: [
+        { name:'ASX 200', price:'8,412', day:-0.84, week:-1.62, month:-3.95, ytd:1.84, meta:'Risk-off / energy divergence' },
+        { name:'S&P 500', price:'5,214', day:-0.41, week:0.28, month:-2.16, ytd:3.11, meta:'Mixed breadth' },
+        { name:'Nasdaq', price:'16,380', day:-0.75, week:0.44, month:-3.38, ytd:4.26, meta:'Growth sensitive' },
+        { name:'AUD/USD', price:'0.651', day:0.18, week:-0.22, month:-1.12, ytd:-0.96, meta:'Commodity + rate cross-currents' }
+      ],
+      macro: [
+        { name:'Brent Oil', price:'US$101.30', day:2.4, week:4.1, month:8.8, ytd:11.7 },
+        { name:'Gold', price:'US$2,184', day:0.5, week:1.2, month:3.7, ytd:6.4 },
+        { name:'US 10Y Yield', price:'4.49%', day:0.12, week:0.18, month:0.31, ytd:0.27 },
+        { name:'VIX', price:'18.7', day:3.9, week:7.2, month:13.8, ytd:10.1 },
+        { name:'Iron Ore', price:'US$105', day:-1.2, week:-2.6, month:-6.5, ytd:-4.8 }
+      ],
+      sectors: [
+        {
+          name:'Energy',
+          stocks:[
+            { ticker:'WDS', name:'Woodside Energy', size:5, story:'Oil and LNG leverage driving relative strength.', moves:{day:2.4,week:4.8,month:11.2,ytd:14.1}, theme:'Oil spike' },
+            { ticker:'STO', name:'Santos', size:4, story:'Barossa ramp and crude strength supporting earnings view.', moves:{day:1.9,week:3.2,month:9.8,ytd:12.9}, theme:'Oil + production growth' },
+            { ticker:'VEA', name:'Viva Energy', size:3, story:'Refining and margin upside in volatile energy markets.', moves:{day:1.3,week:5.1,month:14.4,ytd:16.8}, theme:'Refining tailwind' },
+            { ticker:'KAR', name:'Karoon Energy', size:2, story:'Smaller-cap energy beta attracting tactical flows.', moves:{day:2.1,week:4.0,month:8.3,ytd:9.7}, theme:'High beta oil' }
+          ]
+        },
+        {
+          name:'Materials',
+          stocks:[
+            { ticker:'BHP', name:'BHP Group', size:5, story:'Iron ore softness and China demand concerns weigh.', moves:{day:-1.4,week:-2.6,month:-5.3,ytd:-1.2}, theme:'Iron ore weakness' },
+            { ticker:'RIO', name:'Rio Tinto', size:4, story:'Bulk commodity pricing under pressure.', moves:{day:-1.2,week:-2.1,month:-4.7,ytd:-0.8}, theme:'China concerns' },
+            { ticker:'FMG', name:'Fortescue', size:4, story:'High sensitivity to iron ore and risk sentiment.', moves:{day:-1.9,week:-3.6,month:-7.4,ytd:-3.5}, theme:'Commodity beta' },
+            { ticker:'NST', name:'Northern Star', size:3, story:'Gold bid provides some defence against broader weakness.', moves:{day:0.8,week:1.1,month:4.3,ytd:8.0}, theme:'Safe haven gold' }
+          ]
+        },
+        {
+          name:'Financials',
+          stocks:[
+            { ticker:'CBA', name:'Commonwealth Bank', size:5, story:'Expensive multiple and rate-growth tensions create drag.', moves:{day:-1.0,week:-2.0,month:-4.6,ytd:0.7}, theme:'Valuation pressure' },
+            { ticker:'NAB', name:'National Australia Bank', size:4, story:'Credit risk and margin questions in a slower backdrop.', moves:{day:-1.1,week:-2.7,month:-5.8,ytd:-1.4}, theme:'Credit cycle worry' },
+            { ticker:'WBC', name:'Westpac', size:4, story:'Banks acting as index drag in a cautious tape.', moves:{day:-0.9,week:-2.4,month:-5.2,ytd:-1.1}, theme:'Risk-off financials' },
+            { ticker:'ANZ', name:'ANZ Group', size:4, story:'Muted upside while investors favour real assets.', moves:{day:-0.8,week:-1.8,month:-4.9,ytd:-0.7}, theme:'Rotation away' }
+          ]
+        },
+        {
+          name:'Healthcare',
+          stocks:[
+            { ticker:'CSL', name:'CSL', size:4, story:'Defensive qualities but global duration sensitivity remains.', moves:{day:0.3,week:0.8,month:1.1,ytd:2.9}, theme:'Defensive healthcare' },
+            { ticker:'RMD', name:'ResMed', size:3, story:'Solid quality growth but still tied to US rates narrative.', moves:{day:-0.4,week:0.6,month:2.1,ytd:5.0}, theme:'Quality growth' },
+            { ticker:'SHL', name:'Sonic Healthcare', size:3, story:'Defensive interest returning in volatile market.', moves:{day:0.4,week:1.0,month:1.8,ytd:2.2}, theme:'Defensive rotation' }
+          ]
+        },
+        {
+          name:'Technology',
+          stocks:[
+            { ticker:'XRO', name:'Xero', size:4, story:'Growth names remain sensitive to yield moves.', moves:{day:-0.9,week:0.7,month:-3.9,ytd:4.8}, theme:'Rate-sensitive tech' },
+            { ticker:'NXT', name:'NEXTDC', size:3, story:'Structural story intact, but valuation still matters.', moves:{day:-1.2,week:-0.4,month:-2.8,ytd:7.1}, theme:'Data centre growth' },
+            { ticker:'WTC', name:'WiseTech', size:4, story:'High-quality name but volatile in mixed macro tape.', moves:{day:-0.6,week:0.3,month:-1.7,ytd:6.4}, theme:'Quality growth vs rates' },
+            { ticker:'DRO', name:'DroneShield', size:2, story:'Geopolitical backdrop supporting defence interest.', moves:{day:3.8,week:7.0,month:12.6,ytd:18.9}, theme:'Defence bid' }
+          ]
+        },
+        {
+          name:'Consumer / Travel',
+          stocks:[
+            { ticker:'QAN', name:'Qantas', size:3, story:'Higher fuel and softer confidence pressure travel equities.', moves:{day:-1.7,week:-2.5,month:-6.9,ytd:-2.0}, theme:'Fuel cost pressure' },
+            { ticker:'FLT', name:'Flight Centre', size:2, story:'Travel exposed to oil and consumer fragility.', moves:{day:-1.4,week:-2.9,month:-7.8,ytd:-3.4}, theme:'Oil up, travel down' },
+            { ticker:'ALL', name:'Aristocrat', size:3, story:'Quality consumer exposure holding up better than cyclicals.', moves:{day:0.2,week:1.1,month:2.4,ytd:7.2}, theme:'Selective quality' },
+            { ticker:'JBH', name:'JB Hi-Fi', size:2, story:'Consumer discretionary facing demand risk.', moves:{day:-0.7,week:-1.6,month:-4.2,ytd:1.1}, theme:'Discretionary caution' }
+          ]
+        }
+      ]
+    };
+
+    function fmtPct(v){
+      const s = v > 0 ? '+' : '';
+      return `${s}${v.toFixed(1)}%`;
+    }
+
+    function clsPct(v){
+      if(v > 0.15) return 'pos';
+      if(v < -0.15) return 'neg';
+      return 'flat';
+    }
+
+    function moveOf(item){
+      return item.moves ? item.moves[state.view] : item[state.view];
+    }
+
+    function macroMoveOf(item){
+      return item[state.view];
+    }
+
+    function getTileTone(v){
+      if(v >= 4) return 'pos-4';
+      if(v >= 2) return 'pos-3';
+      if(v >= 0.5) return 'pos-2';
+      if(v > 0) return 'pos-1';
+      if(v <= -4) return 'neg-4';
+      if(v <= -2) return 'neg-3';
+      if(v <= -0.5) return 'neg-2';
+      if(v < 0) return 'neg-1';
+      return 'flat';
+    }
+
+    function getSizeClass(size){
+      const map = {
+        1:['w1','h1'],
+        2:['w2','h2'],
+        3:['w3','h2'],
+        4:['w4','h3'],
+        5:['w5','h4']
+      };
+      return map[size] || ['w2','h1'];
+    }
+
+    function renderTimestamp(){
+      const now = new Date();
+      document.getElementById('timestamp').textContent =
+        `Updated: ${now.toLocaleString('en-AU', {
+          year:'numeric',
+          month:'short',
+          day:'2-digit',
+          hour:'2-digit',
+          minute:'2-digit'
+        })}`;
+    }
+
+    function renderMacro(){
+      const el = document.getElementById('macroList');
+      el.innerHTML = data.macro.map(m => `
+        <div class="mini-row">
+          <div class="name">${m.name}</div>
+          <div class="price">${m.price}</div>
+          <div class="chg ${clsPct(macroMoveOf(m))}">${fmtPct(macroMoveOf(m))}</div>
+        </div>
+      `).join('');
+    }
+
+    function sectorAggregate(sector){
+      const vals = sector.stocks.map(moveOf);
+      return vals.reduce((a,b)=>a+b,0) / vals.length;
+    }
+
+    function renderHeatmap(){
+      const wrap = document.getElementById('sectorGrid');
+      wrap.innerHTML = data.sectors.map(sector => {
+        const agg = sectorAggregate(sector);
+        return `
+          <section class="sector">
+            <div class="sector-head">
+              <div class="sector-name">${sector.name}</div>
+              <div class="sector-change ${clsPct(agg)}">${fmtPct(agg)}</div>
+            </div>
+            <div class="tiles">
+              ${sector.stocks.map(s => {
+                const v = moveOf(s);
+                const tone = getTileTone(v);
+                const [w,h] = getSizeClass(s.size);
+                return `
+                  <div class="tile ${tone} ${w} ${h}" data-ticker="${s.ticker}">
+                    <div>
+                      <div class="ticker">${s.ticker}</div>
+                      <div class="company">${s.name}</div>
+                    </div>
+                    <div class="tile-bottom">
+                      <div class="tile-move">${fmtPct(v)}</div>
+                      <div class="tile-weight">Size ${s.size}</div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </section>
+        `;
+      }).join('');
+
+      wrap.querySelectorAll('.tile').forEach(tile => {
+        tile.addEventListener('click', () => {
+          const ticker = tile.dataset.ticker;
+          state.selectedTicker = ticker;
+          renderStockStory();
+        });
+      });
+    }
+
+    function flattenStocks(){
+      return data.sectors.flatMap(sector => sector.stocks.map(stock => ({...stock, sector:sector.name})));
+    }
+
+    function renderStats(){
+      const all = flattenStocks();
+      const vals = all.map(moveOf);
+      const adv = vals.filter(v => v > 0).length;
+      const dec = vals.filter(v => v < 0).length;
+      const unchanged = vals.length - adv - dec;
+      const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+      const best = all.reduce((a,b) => moveOf(a) > moveOf(b) ? a : b);
+      const worst = all.reduce((a,b) => moveOf(a) < moveOf(b) ? a : b);
+
+      const stats = [
+        {label:'Advancers / Decliners', value:`${adv} / ${dec}`, meta:`Unchanged ${unchanged}`},
+        {label:'Average Stock Move', value:fmtPct(avg), meta:'Cross-section mean'},
+        {label:'Best Relative Strength', value:best.ticker, meta:`${fmtPct(moveOf(best))} · ${best.theme}`},
+        {label:'Weakest Name', value:worst.ticker, meta:`${fmtPct(moveOf(worst))} · ${worst.theme}`}
+      ];
+
+      document.getElementById('statsGrid').innerHTML = stats.map(s => `
+        <div class="stat">
+          <div class="label">${s.label}</div>
+          <div class="value">${s.value}</div>
+          <div class="meta">${s.meta}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderMovers(){
+      const rows = flattenStocks()
+        .sort((a,b) => moveOf(b) - moveOf(a))
+        .slice(0,8)
+        .concat(
+          flattenStocks().sort((a,b) => moveOf(a) - moveOf(b)).slice(0,8)
+        );
+
+      document.getElementById('moversTable').innerHTML = rows.map(r => `
+        <tr>
+          <td>
+            <div class="ticker-cell">
+              <strong>${r.ticker}</strong>
+              <span>${r.name}</span>
+            </div>
+          </td>
+          <td><span class="chg ${clsPct(moveOf(r))}">${fmtPct(moveOf(r))}</span></td>
+          <td>${r.theme}</td>
+          <td class="reason">${r.story}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderSectorPerf(){
+      const tbody = document.getElementById('sectorPerfTable');
+      const reads = {
+        positive:'Leadership / relative strength',
+        negative:'Under pressure / index drag',
+        neutral:'Mixed / stock-specific'
+      };
+
+      tbody.innerHTML = data.sectors.map(sector => {
+        const v = sectorAggregate(sector);
+        const read = v > 0.3 ? reads.positive : v < -0.3 ? reads.negative : reads.neutral;
+        return `
+          <tr>
+            <td>${sector.name}</td>
+            <td><span class="chg ${clsPct(v)}">${fmtPct(v)}</span></td>
+            <td class="reason">${read}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderTalkingPoints(){
+      const items = [
+        {
+          title:'Energy is masking weakness elsewhere',
+          body:'The tape looks stronger at surface level than beneath it. Energy is doing the heavy lifting while banks, miners and travel remain patchy.'
+        },
+        {
+          title:'This is a rotation market, not a broad bull move',
+          body:'Flows are favouring cash flow, real assets and geopolitical hedges over rate-sensitive growth and cyclical risk.'
+        },
+        {
+          title:'Breadth matters more than the headline index',
+          body:'The ASX 200 can look resilient even when a large portion of the market is red. Watch the cross-section, not just the benchmark.'
+        }
+      ];
+
+      document.getElementById('talkingPoints').innerHTML = items.map(p => `
+        <div class="point">
+          <strong>${p.title}</strong>
+          <span>${p.body}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderOpportunityBoard(){
+      const html = `
+        <div class="point">
+          <strong>Overweight leadership carefully</strong>
+          <span>Energy remains the cleanest relative-strength trade, but entries matter after sharp moves. Prefer quality balance sheets and cash flow visibility.</span>
+        </div>
+        <div class="point">
+          <strong>Build a watchlist in quality weakness</strong>
+          <span>Names like CSL, ResMed, Xero and Aristocrat can become more interesting if macro volatility creates better entry points without breaking the thesis.</span>
+        </div>
+        <div class="point">
+          <strong>Be selective in laggards</strong>
+          <span>Weakness in banks and miners may reflect real macro pressure rather than a simple dip-buy opportunity. Separate value from value traps.</span>
+        </div>
+      `;
+      document.getElementById('opportunityBoard').innerHTML = html;
+    }
+
+    function renderThemes(){
+      const tags = [
+        'Oil shock',
+        'Higher-for-longer rates',
+        'Energy leadership',
+        'Banks under pressure',
+        'Iron ore weakness',
+        'Defence bid',
+        'Safe haven gold',
+        'Headline-driven volatility'
+      ];
+      document.getElementById('themesPanel').innerHTML = `
+        <div>
+          ${tags.map(t => `<span class="tag">${t}</span>`).join('')}
+        </div>
+        <div style="height:10px"></div>
+        <div class="point">
+          <strong>Core read</strong>
+          <span>The market is rewarding hard-asset exposure and penalising duration, cyclicality and consumer sensitivity. The challenge is separating tactical noise from investable trend.</span>
+        </div>
+      `;
+    }
+
+    function renderStockStory(){
+      const el = document.getElementById('stockStory');
+      const all = flattenStocks();
+      const stock = all.find(s => s.ticker === state.selectedTicker) || all.find(s => s.ticker === 'STO');
+
+      if(!state.selectedTicker) state.selectedTicker = stock.ticker;
+
+      const v = moveOf(stock);
+      const tone =
+        v > 1 ? 'The stock is showing clear relative strength.' :
+        v < -1 ? 'The stock is under noticeable pressure.' :
+        'The stock is trading in a more neutral or mixed pattern.';
+
+      el.innerHTML = `
+        <div class="point">
+          <strong>${stock.ticker} — ${stock.name}</strong>
+          <span>${stock.story}</span>
+        </div>
+        <div class="point">
+          <strong>Current read</strong>
+          <span>${tone} In the selected <b>${state.view.toUpperCase()}</b> view, the move is <b>${fmtPct(v)}</b>. Sector: <b>${stock.sector}</b>. Theme: <b>${stock.theme}</b>.</span>
+        </div>
+        <div class="point">
+          <strong>Meeting language</strong>
+          <span>${stock.ticker} has been reacting primarily to the <b>${stock.theme.toLowerCase()}</b> theme. The move is less about stock-specific noise and more about where capital is rotating in the current macro backdrop.</span>
+        </div>
+      `;
+    }
+
+    function renderIndicesAndRegime(){
+      const asx = data.indices[0];
+      const move = asx[state.view];
+
+      let regimeLabel = 'Balanced Rotation';
+      let primaryDriver = 'Mixed macro inputs';
+      let bestStrength = 'Quality large caps';
+      let weakestPocket = 'Unclear';
+
+      if(move <= -2){
+        regimeLabel = 'Risk-Off Rotation';
+        primaryDriver = 'Oil, geopolitics, higher-for-longer rates';
+        bestStrength = 'Energy, defence, selective gold';
+        weakestPocket = 'Banks, cyclicals, consumer travel';
+      } else if(move >= 2){
+        regimeLabel = 'Risk-On Expansion';
+        primaryDriver = 'Growth optimism and falling macro stress';
+        bestStrength = 'Tech, cyclicals, discretionary';
+        weakestPocket = 'Defensives lagging';
+      } else {
+        regimeLabel = 'Mixed / Tactical Tape';
+        primaryDriver = 'Stock-specific moves and changing macro narrative';
+        bestStrength = 'Selective leaders only';
+        weakestPocket = 'Index heavy laggards';
+      }
+
+      const regimeEl = document.getElementById('regimeLabel');
+      regimeEl.textContent = regimeLabel;
+      regimeEl.className = 'value ' + (move <= -1 ? 'risk-off' : move >= 1 ? 'risk-on' : 'neutral');
+
+      document.getElementById('primaryDriver').textContent = primaryDriver;
+      document.getElementById('bestStrength').textContent = bestStrength;
+      document.getElementById('weakestPocket').textContent = weakestPocket;
+    }
+
+    function setActiveButtons(){
+      document.querySelectorAll('.btn[data-view]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === state.view);
+      });
+    }
+
+    function attachViewControls(){
+      document.querySelectorAll('.btn[data-view]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.view = btn.dataset.view;
+          rerender();
+        });
+      });
+    }
+
+    function rerender(){
+      setActiveButtons();
+      renderIndicesAndRegime();
+      renderMacro();
+      renderHeatmap();
+      renderStats();
+      renderMovers();
+      renderSectorPerf();
+      renderTalkingPoints();
+      renderOpportunityBoard();
+      renderThemes();
+      renderStockStory();
+      renderTimestamp();
+    }
+
+    attachViewControls();
+    state.selectedTicker = 'STO';
+    rerender();
+  </script>
+</body>
+</html>
